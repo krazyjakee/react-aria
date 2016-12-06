@@ -233,10 +233,11 @@ class App extends Component {
     return (
       <div>
         <Dropdown/>
+        {/*<Dropdown/>
         <Modal/>
         <PopoverComponent/>
         <Tabs/>
-        <Accordion/>
+        <Accordion/>*/}
       </div>
     )
   }

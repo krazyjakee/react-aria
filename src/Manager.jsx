@@ -1,10 +1,6 @@
 import React, { Component, PropTypes, createElement } from 'react'
 import createFocusGroup from 'focus-group'
-import noScroll from 'no-scroll'
-import EventsHandler from './events-handler'
 import specialAssign from './special-assign'
-
-const isTarget = (node, target) => (node === target || node.contains(target))
 
 const KEYS = {
   tab:        9,
@@ -34,13 +30,7 @@ const checkedProps = {
   stringSearch:         PropTypes.bool,
   stringSearchDelay:    PropTypes.number,
   collapsible:          PropTypes.bool,
-  openPopoverOn:        PropTypes.oneOf(['tap', 'hover']),
-  closeOnOutsideClick:  PropTypes.bool,
-  closeOnItemSelection: PropTypes.bool,
   accordion:            PropTypes.bool,
-  onPopoverOpen:        PropTypes.func,
-  onPopoverClose:       PropTypes.func,
-  onItemSelection:      PropTypes.func,
 }
 
 class Manager extends Component {
@@ -64,12 +54,6 @@ class Manager extends Component {
     stringSearch:         true,
     stringSearchDelay:    600,
     collapsible:          false,
-    openPopoverOn:        'tap',
-    closeOnOutsideClick:  true,
-    closeOnItemSelection: true,
-    onPopoverOpen:        () => null,
-    onPopoverClose:       () => null,
-    onItemSelection:      () => null,
   }
 
   constructor(props) {
@@ -80,8 +64,8 @@ class Manager extends Component {
     }
 
     this._focusGroup  = createFocusGroup(props)
-    this._toggle      = null
-    this._popover     = null
+    this._toggleNode  = null
+    this._popoverNode = null
     this._members     = []
     this._panels      = []
     this._activeTabId = props.activeTabId
@@ -100,100 +84,33 @@ class Manager extends Component {
         setToggleNode:   this._setToggleNode,
         setPopoverNode:  this._setPopoverNode,
         addMember:       this._addMember,
-        addPanel:        this._addPanel,
         removeMember:    this._removeMember,
+        addPanel:        this._addPanel,
+        toggleNode:      this._toggleNode,
+        popoverNode:     this._popoverNode,
+        members:         this._members,
+        panels:          this._panels,
         activateTab:     this._activateTab,
         focusItem:       this._focusItem,
-        openPopover:     this.openPopover,
-        closePopover:    this.closePopover,
-        togglePopover:   this.togglePopover
+        setState:        this.setState
       }
     }
   }
 
   componentWillMount() {
     this._focusGroup.activate()
-    EventsHandler.add(this)
   }
 
   componentWillUnmount() {
     this._focusGroup.deactivate()
-    EventsHandler.remove(this)
-  }
-
-  _onTap(e) {
-    if (this.props.openPopoverOn === 'tap') {
-      this._handleTapOrHover(e)
-    }
-  }
-
-  _onHover(e) {
-    if (this.props.openPopoverOn === 'hover') {
-      this._handleTapOrHover(e)
-    }
-  }
-
-  _handleTapOrHover(e) {
-    const { openPopoverOn, closeOnOutsideClick } = this.props
-    const { target } = e
-
-    if (this._toggle) {
-      const toggleDisabled = this._toggle.getAttribute('disabled')
-
-      if (isTarget(this._toggle, target) && toggleDisabled === null) {
-        if (openPopoverOn === 'tap') {
-          this.togglePopover(false)
-        } else {
-          this.openPopover(false)
-        }
-        return
-      }
-      else if (closeOnOutsideClick && this._popover && !isTarget(this._popover, target)) {
-        this.closePopover(false)
-        return
-      }
-    }
-
-    for (let i = this._members.length; i--;) {
-      const member = this._members[i]
-      if (member.node === target) {
-        if (member.type === 'item') {
-          this._onItemSelection(member, e)
-        } else {
-          this._activateTab(member.id)
-        }
-        return
-      }
-    }
-  }
-
-  _onKeyDown({ keyCode }) {
-    if (this.state.isPopoverOpen) {
-      if (!this.props.trapFocus && keyCode === KEYS.tab) {
-        this.closePopover(false)
-      }
-      else if (keyCode === KEYS.escape) {
-        this.closePopover()
-      }
-    }
-  }
-
-  _onItemSelection = (item, e) => {
-    const value = item.value || item.node.innerHTML
-
-    if (this.props.closeOnItemSelection) {
-      this.closePopover()
-    }
-
-    this.props.onItemSelection(value, e)
   }
 
   _setToggleNode = (node) => {
-    this._toggle = node
+    this._toggleNode = node
   }
 
   _setPopoverNode = (node) => {
-    this._popover = node
+    this._popoverNode = node
   }
 
   _addMember = (member) => {
@@ -231,54 +148,6 @@ class Manager extends Component {
 
   _focusItem = (index) => {
     this._focusGroup.focusNodeAtIndex(index)
-  }
-
-  openPopover = (focusFirstMember = true) => {
-    const { freezeScroll, onPopoverOpen } = this.props
-
-    if (this.state.isPopoverOpen) return;
-
-    this.setState({ isPopoverOpen: true })
-
-    if (freezeScroll) {
-      noScroll.on()
-    }
-
-    onPopoverOpen()
-
-    if (focusFirstMember) {
-      setTimeout(() => {
-        this._focusItem(0)
-      }, 60)
-    }
-  }
-
-  closePopover = (focusToggle = true) => {
-    const { freezeScroll, onPopoverClose } = this.props
-
-    if (!this.state.isPopoverOpen) return;
-
-    this.setState({ isPopoverOpen: false })
-
-    if (freezeScroll) {
-      noScroll.off()
-    }
-
-    onPopoverClose()
-
-    if (focusToggle) {
-      setTimeout(() => {
-        this._toggle.focus()
-      }, 60)
-    }
-  }
-
-  togglePopover = (focus) => {
-    if (!this.state.isPopoverOpen) {
-      this.openPopover(focus)
-    } else {
-      this.closePopover(focus)
-    }
   }
 
   _addPanel = (panel) => {

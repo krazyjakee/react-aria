@@ -34,8 +34,9 @@ class Item extends Component {
   _handleKeyDown = (e) => {
     const { onKeyDown } = this.props
 
+    // use ariaPopover context to select this item when using the keyboard
     if ([' ', 'Enter'].indexOf(e.key) > -1) {
-      this.context.ariaManager.onItemSelection(this._member, e)
+      this.context.ariaPopover.onItemSelection(this._member, e)
     }
     if (onKeyDown) {
       onKeyDown(e)
