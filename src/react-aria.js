@@ -1,5 +1,0 @@
-export * as Items from './Items'
-export * as Overlays from './Overlays'
-export * as Select from './Select'
-export * as Tabs from './Tabs'
-export Trigger from './Trigger'

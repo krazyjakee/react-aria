@@ -1,57 +1,35 @@
-var path = require('path');
-var webpack = require('webpack');
-var TARGET = process.env.TARGET || null;
+const { resolve } = require('path')
+const webpack = require('webpack')
 
-var config = {
-  entry: {
-  },
+const config = {
+  entry: [
+    'webpack-dev-server/client?http://localhost:8080',
+    'webpack/hot/only-dev-server',
+    resolve(__dirname, 'example/index.js'),
+  ],
+
   output: {
-    path: path.join(__dirname, 'example'),
-    filename: 'bundle.js'
+    path: resolve(__dirname, 'example'),
+    filename: 'bundle.js',
   },
-  module: {
-    loaders: [
-      { test: /\.(js|jsx)/, exclude: /node_modules/, loader: 'babel-loader' },
-      { test: /\.(css|scss)/, loader: 'style!css!postcss!sass?sourceMap' }
-    ]
-  },
-  resolve: {
-    extensions: ['', '.js', '.jsx']
-  },
-  plugins: [],
+
+  devtool: 'inline-source-map',
+
   devServer: {
-    contentBase: './example',
-    inline: true
-  }
-};
+    contentBase: resolve(__dirname, 'example'),
+    inline: true,
+  },
 
-if (TARGET === 'minify') {
-  config.entry.index = path.join(__dirname, 'example/index.jsx');
-
-  config.plugins.push(new webpack.DefinePlugin({
-    'process.env': {
-      NODE_ENV: JSON.stringify('production')
-    }
-  }))
-
-  config.plugins.push(new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        screw_ie8: true,
-        warnings: false
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)/,
+        use: [{ loader: 'babel-loader' }],
       },
-      mangle: {
-        screw_ie8: true
-      },
-      output: {
-        comments: false,
-        screw_ie8: true
-      }
-    }));
-} else {
-  config.entry.index = [
-    'webpack/hot/dev-server',
-    path.join(__dirname, 'example/index.jsx')
-  ];
+    ],
+  },
+
+  plugins: [new webpack.HotModuleReplacementPlugin(), new webpack.NamedModulesPlugin()],
 }
 
-module.exports = config;
+module.exports = config
